@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 from os import listdir
 from os.path import isfile, join
@@ -21,12 +22,6 @@ for fo in range(len(folders)):
         pathname_list.append(mypath+"\\"+folders[fo]+"\\"+fi)
 
 #print(len(pathname_list))
-Y = []
-for folder_name in folders:
-    folder_path = join(mypath, folder_name)
-    num_of_files = len(listdir(folder_path))
-    for i in range(num_of_files):
-        Y.append(folder_name)
 
 def preprocess(words):
    # dua ve dang chu thuong
@@ -126,16 +121,58 @@ def flatten(list):
             new_list.append(j)
     return new_list
 
-count  = 0
+
 list_of_words = []
 print(len(pathname_list))
 vo = open("vocabulary.txt", "w+")
 for doc in pathname_list :
     count = count + 1
+    list_of_words.append(flatten(tokenize(doc)))
     for lo in flatten(tokenize(doc)): 
         vo.write(lo+'\n')
-    if count == 50 :
-        break
 
-     
+
 vo.close()
+
+np_list_of_words = np.asarray(flatten(list_of_words))
+
+words, counts = np.unique(np_list_of_words, return_counts=True)
+print(len(words))
+freq, wrds = (list(i) for i in zip(*(sorted(zip(counts, words), reverse=True))))
+
+   
+
+
+dicti = {}
+doc_num = 1
+for doc_words in list_of_words:
+    np_doc_words = np.asarray(doc_words)
+    w, c = np.unique(np_doc_words, return_counts=True)
+    dicti[doc_num] = {}
+    for i in range(len(w)):
+        dicti[doc_num][w[i]] = c[i]
+    doc_num = doc_num + 1
+n = 5000
+features = wrds[0:n]
+fe = open("features","w+")
+for f in features :
+    fe.write(f+'\n')
+fe.close()
+test = []
+out = {}
+index = 1;
+for k in dicti.keys():
+    row = []
+    cc = 0;
+    out[index] = {}
+    for f in features:
+        if(f in dicti[k].keys()):
+           out[index][cc] = dicti[k][f]
+           row.append(dicti[k][f])
+        else:
+            row.append(0)
+        cc = cc + 1
+    test.append(row)
+    index = index + 1
+for k in out.keys():
+    print(out[k])
